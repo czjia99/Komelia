@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import io.github.snd_r.komelia.ui.komelia_ui.generated.resources.Res
+import io.github.snd_r.komelia.ui.komelia_ui.generated.resources.login_android_lan_access_dialog
 import io.github.snd_r.komelia.ui.komelia_ui.generated.resources.login_cancel
 import io.github.snd_r.komelia.ui.komelia_ui.generated.resources.login_go_offline
 import io.github.snd_r.komelia.ui.komelia_ui.generated.resources.login_komf_desc
@@ -53,12 +54,14 @@ import org.jetbrains.compose.resources.stringResource
 import snd.komelia.ui.LocalPlatform
 import snd.komelia.ui.common.components.OutlinedHttpTextField
 import snd.komelia.ui.common.components.withTextFieldNavigation
+import snd.komelia.ui.dialogs.ConfirmationDialog
 import snd.komelia.ui.dialogs.permissions.AccessLocalNetworkRequestDialog
 import snd.komelia.ui.platform.PlatformType
 import snd.komelia.ui.platform.PlatformType.DESKTOP
 import snd.komelia.ui.platform.PlatformType.MOBILE
 import snd.komelia.ui.platform.cursorForHand
 import snd.komelia.ui.platform.hasLanPermission
+import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
@@ -85,6 +88,10 @@ fun LoginContent(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (!hasLanPermission()) {
+                LanAccessRequestDialog { onAutoLoginRetry() }
+            }
+
             Text(
                 autoLoginError,
                 style = MaterialTheme.typography.titleMedium,
@@ -160,7 +167,6 @@ fun LoginContent(
         }
 
     }
-
 }
 
 @Composable
@@ -234,7 +240,7 @@ fun ColumnScope.LoginForm(
     }
 
     if (showLanPermissionRequest) {
-        AccessLocalNetworkRequestDialog {
+        LanAccessRequestDialog {
             showLanPermissionRequest = false
             onLogin()
         }
@@ -245,17 +251,10 @@ fun ColumnScope.LoginForm(
 
 @Composable
 fun LoginLoadingContent(onCancel: () -> Unit) {
-    val hasLanPermission = hasLanPermission()
-    var lanPermissionRequested by remember { mutableStateOf(false) }
-    if (!hasLanPermission && !lanPermissionRequested) {
-        AccessLocalNetworkRequestDialog {
-            lanPermissionRequested = true
-        }
-    }
 
     var showCancelButton by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        delay(5000)
+        delay(5.seconds)
         showCancelButton = true
     }
     Column(
@@ -263,12 +262,31 @@ fun LoginLoadingContent(onCancel: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         CircularProgressIndicator()
         if (showCancelButton) {
             Spacer(Modifier.height(100.dp))
             Button(onClick = onCancel) { Text(stringResource(Res.string.login_cancel)) }
         }
+    }
+}
 
+@Composable
+private fun LanAccessRequestDialog(onComplete: () -> Unit) {
+    var showLanAccessExplanation by remember { mutableStateOf(true) }
+    var showLanAccessRequest by remember { mutableStateOf(false) }
+    if (showLanAccessExplanation) {
+        ConfirmationDialog(
+            body = stringResource(Res.string.login_android_lan_access_dialog),
+            onDialogConfirm = {
+                showLanAccessExplanation = false
+                showLanAccessRequest = true
+            },
+            buttonCancel = null,
+            onDialogDismiss = {}
+
+        )
+    }
+    if (showLanAccessRequest) {
+        AccessLocalNetworkRequestDialog { onComplete() }
     }
 }

@@ -999,6 +999,11 @@
     <string name="login_cancel">Cancel login attempt</string>
     <string name="login_komf_title">Full-featured web client for Komga</string>
     <string name="login_komf_desc">Requires adding this host and port to Komga CORS configuration</string>
+    <string name="login_android_lan_access_dialog">In order to connect to local addresses "nearby devices" permission is required.\nPlease allow this via the following dialog box or change it via system setting</string>
+    <string name="login_unexpected_response">Unexpected response for url %1$s</string>
+    <string name="login_invalid_credentials">Invalid credentials</string>
+    <string name="login_cancel_error">Cancelled login attempt</string>
+    <string name="login_error">Login error: %1$s</string>
 
     <string name="search_search_all">Search all...</string>
     <string name="search_search_input_placeholder">Search</string>

@@ -73,7 +73,7 @@ class LoginScreen : Screen {
         val state = viewModel.state.collectAsState()
 
         when (state.value) {
-            Loading, Uninitialized -> LoginLoadingContent(viewModel::cancel)
+            Uninitialized, Loading -> LoginLoadingContent(viewModel::cancel)
 
             is Error -> LoginContent(
                 url = viewModel.url.collectAsState().value,
