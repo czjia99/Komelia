@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import snd.komelia.AppNotifications
 import snd.komelia.KomgaAuthenticationState
+import snd.komelia.http.ApiKeyStore
 import snd.komelia.komga.api.KomgaLibraryApi
 import snd.komelia.komga.api.KomgaUserApi
 import snd.komelia.offline.api.OfflineLibraryApi
@@ -43,6 +44,7 @@ private val logger = KotlinLogging.logger { }
 class LoginViewModel(
     private val settingsRepository: CommonSettingsRepository,
     private val secretsRepository: SecretsRepository,
+    private val apiKeyStore: ApiKeyStore,
     private val komgaUserApi: Flow<KomgaUserApi>,
     private val komgaLibraryApi: Flow<KomgaLibraryApi>,
     private val komgaAuthState: KomgaAuthenticationState,
@@ -58,6 +60,7 @@ class LoginViewModel(
     var url = MutableStateFlow("")
     var user = MutableStateFlow("")
     var password = MutableStateFlow("")
+    var apiKey = MutableStateFlow("")
     var userLoginError = MutableStateFlow<String?>(null)
     var autoLoginError = MutableStateFlow<String?>(null)
     val offlineIsAvailable = MutableStateFlow(false)
@@ -97,8 +100,12 @@ class LoginViewModel(
                 }
 
                 WEB_KOMF -> {
-                    mutableState.value = LoadState.Loading
-                    tryAutologin()
+                    if(apiKeyStore.apiKey!=null) {
+                        mutableState.value = LoadState.Loading
+                        tryAutologin()
+                    }else{
+                        mutableState.value = LoadState.Error(RuntimeException("Not logged in"))
+                    }
                 }
             }
         }
@@ -126,6 +133,15 @@ class LoginViewModel(
             settingsRepository.putServerUrl(url.value)
             settingsRepository.putCurrentUser(user.value)
             tryUserLogin(user.value, password.value)
+        }
+    }
+
+    fun loginWithApiKey() {
+        screenModelScope.launch {
+            userLoginError.value = null
+            settingsRepository.putServerUrl(url.value)
+            apiKeyStore.setApiKey(url.value, apiKey.value)
+            tryUserLogin(null, null)
         }
     }
 
@@ -158,7 +174,7 @@ class LoginViewModel(
         }
     }
 
-    private suspend fun tryUserLogin(username: String, password: String) {
+    private suspend fun tryUserLogin(username: String?, password: String?) {
         try {
             tryLogin(username, password)
         } catch (e: Throwable) {
