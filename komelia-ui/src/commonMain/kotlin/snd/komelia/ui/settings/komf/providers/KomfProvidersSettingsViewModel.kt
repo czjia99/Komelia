@@ -5,9 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
@@ -149,11 +151,15 @@ class KomfProvidersSettingsViewModel(
     }
 
     fun onMangaBakaDbUpdate(): Flow<DownloadProgress> {
-        return komfConfigClient.updateMangaBakaDb().onCompletion { komfSharedState.loadConfig() }
+        return komfConfigClient.updateMangaBakaDb()
+            .flowOn(Dispatchers.Default)
+            .onCompletion { komfSharedState.loadConfig() }
     }
 
     fun onBookWalkerDbUpdate(): Flow<DownloadProgress> {
-        return komfConfigClient.updateBookWalkerDb().onCompletion { komfSharedState.loadConfig() }
+        return komfConfigClient.updateBookWalkerDb()
+            .flowOn(Dispatchers.Default)
+            .onCompletion { komfSharedState.loadConfig() }
     }
 
     class ProvidersConfigState(
