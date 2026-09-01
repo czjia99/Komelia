@@ -443,6 +443,8 @@ tasks.register<DefaultTask>("komfWebUI") {
     inputs.dir(appResourcesInput)
     inputs.dir(webWorkerInput)
     outputs.dir(output)
+    outputs.dir(outputResourcesFiles)
+    outputs.dir(outputResourcesValues)
     val injected = project.objects.newInstance<Injected>()
 
     doLast {
